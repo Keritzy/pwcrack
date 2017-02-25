@@ -1,9 +1,10 @@
 # pwcrack.py
-# Password cracker in python by Bit.
+# A simple CPU based python password cracker by Bit.
+# Syntax:
 #     --help             Displays this help
 # -m  --mode 0|1         Selects the cracking mode. 0: bruteforce, 1: dictionary
 # -a  --algorithm        Selects the hashing algorithm.
-# -h  --hashes file      Selects the hash file to read from.
+# -h  --hashes file      Selects the hash file to read from. Required.
 # -c  --charset letters  Changes the character set. Only used in bruteforce mode.
 # -s  --seek attempt     Seeks to start searching at attempt. Incompatible with
 #                        random flag.
@@ -15,7 +16,18 @@
 #                        in dictionary mode. *
 # -g  --generate         Generates pre-computed dictionary instead of solving
 #                        hashes. Only used in dictionary mode. Compatible with
-#                        seek option.
+#                        seek option. Hashes options not required.
+# Examples:
+# Bruteforce the file ./test-md5-hashes.hash under md5:
+#   pwcrack.py -m 0 -a md5 -h "./test-md5-hashes.hash"
+# Dictionary attack the hashes under sha1:
+#   pwcrack.py -m 1 -a sha1 -h "./test-sha1-hashes.hash" -d "./test.dict"
+# Bruteforce the hashes starting at 5 characters:
+#   pwcrack.py -m 0 -a md5 -h "./test-sha1-hashes.hash" -s 00000
+# Only use numbers:
+#   pwcrack.py -m 0 -a md5 -h "./test-sha1-hashes.hash" -c 0123456789
+# Generate hashes to ./output-sha1.hash:
+#   pwcrack.py -m 0 -a sha1 -g -o "./output-sha1.hash"
 
 import sys
 import getopt
@@ -32,7 +44,7 @@ seek = 0
 output = 0
 
 def syntax(code):
-  print("pwcrack.py\nPassword cracker in python by Bit.\n    --help             Displays this help\n-m  --mode 0|1         Selects the cracking mode. 0: bruteforce, 1: dictionary\n-a  --algorithm        Selects the hashing algorithm.\n-h  --hashes file      Selects the hash file to read from.\n-c  --charset letters  Changes the character set. Only used in bruteforce mode.\n-s  --seek attempt     Seeks to start searching at attempt. Incompatible with\n                       random flag.\n-r  --random max       Randomly attempts hashes up to max length.\n-d  --dictionary file  Selects the dictionary file to read from. Only used in\n                       dictionary mode.\n-o  --output file      Selects the ouput file to output solved hashes.\n-p  --pre-computed     Indicates that the dictionary is pre-computed. Only used\n                       in dictionary mode.\n-g  --generate         Generates pre-computed dictionary instead of solving\n                       hashes. Only used in dictionary mode. Compatible with\n                       seek option.")
+  print("pwcrack.py\nA simple CPU based python password cracker by Bit.\nSyntax:\n    --help             Displays this help\n-m  --mode 0|1         Selects the cracking mode. 0: bruteforce, 1: dictionary\n-a  --algorithm        Selects the hashing algorithm.\n-h  --hashes file      Selects the hash file to read from. Required.\n-c  --charset letters  Changes the character set. Only used in bruteforce mode.\n-s  --seek attempt     Seeks to start searching at attempt. Incompatible with\n                       random flag.\n-r  --random max       Randomly attempts hashes up to max length. *\n-d  --dictionary file  Selects the dictionary file to read from. Only used in\n                       dictionary mode.\n-o  --output file      Selects the ouput file to output solved hashes.\n-p  --pre-computed     Indicates that the dictionary is pre-computed. Only used\n                       in dictionary mode. *\n-g  --generate         Generates pre-computed dictionary instead of solving\n                       hashes. Only used in dictionary mode. Compatible with\n                       seek option. Hashes options not required.\nExamples:\nBruteforce the file ./test-md5-hashes.hash under md5:\n  pwcrack.py -m 0 -a md5 -h \"./test-md5-hashes.hash\"\nDictionary attack the hashes under sha1:\n  pwcrack.py -m 1 -a sha1 -h \"./test-sha1-hashes.hash\" -d \"./test.dict\"\nBruteforce the hashes starting at 5 characters:\n  pwcrack.py -m 0 -a md5 -h \"./test-sha1-hashes.hash\" -s 00000\nOnly use numbers:\n  pwcrack.py -m 0 -a md5 -h \"./test-sha1-hashes.hash\" -c 0123456789\nGenerate hashes to ./output-sha1.hash:\n  pwcrack.py -m 0 -a sha1 -g -o \"./output-sha1.hash\"")
   sys.exit(code)
   
 def errorQuit(message, code):
@@ -43,8 +55,9 @@ try:
   options, args = getopt.getopt(sys.argv[1:], "m:a:h:c:s:r:d:o:pg", ["mode=", "algorithm=", "hashes=", "charset=", "seek=", "random=", "dictionary=", "output=", "pre-computed", "generate"])
 except getopt.GetoptError:
   syntax(2)
-  
-print(options) # debug
+
+if len(options) <= 0:
+  syntax(0)
 
 for option, arg in options:
   
